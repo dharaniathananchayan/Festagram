@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}Event Calendar - Festagram{% endblock %}
+
+{% block head %}
+<!-- FullCalendar CSS -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6">
+                        <i class="fas fa-calendar me-2"></i>Event Calendar
+                    </h1>
+                    <p class="lead text-muted">View all upcoming events in calendar format</p>
+                </div>
+                {% if current_user.is_authenticated and current_user.is_admin() %}
+                <a href="{{ url_for('create_event') }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Create Event
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body py-2">
+                    <div class="row align-items-center">
+                        <div class="col-md-2">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>Legend:
+                            </small>
+                        </div>
+                        <div class="col-md-10">
+                            <div class="d-flex flex-wrap gap-3">
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-graduation-cap me-1"></i>Academic
+                                </span>
+                                <span class="badge bg-info">
+                                    <i class="fas fa-theater-masks me-1"></i>Cultural
+                                </span>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-running me-1"></i>Sports
+                                </span>
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-code me-1"></i>Technical
+                                </span>
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-users me-1"></i>Social
+                                </span>
+                                <span class="badge bg-dark">
+                                    <i class="fas fa-tools me-1"></i>Workshop
+                                </span>
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-trophy me-1"></i>Competition
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Event List (hidden by default, shown on small screens) -->
+    <div class="row d-md-none mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>Upcoming Events
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="mobile-events-list">
+                        <!-- Events will be populated here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Event Detail Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventModalTitle">Event Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="eventModalBody">
+                <!-- Event details will be populated here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="#" id="eventModalViewButton" class="btn btn-primary">
+                    <i class="fas fa-eye me-1"></i>View Full Details
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- FullCalendar JS -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    const events = {{ events|tojson }};
+    
+    // Category color mapping
+    const categoryColors = {
+        'academic': '#0d6efd',      // primary
+        'cultural': '#0dcaf0',      // info
+        'sports': '#198754',        // success
+        'technical': '#ffc107',     // warning
+        'social': '#6c757d',        // secondary
+        'workshop': '#212529',      // dark
+        'seminar': '#f8f9fa',       // light
+        'competition': '#dc3545',   // danger
+        'other': '#6c757d'          // secondary
+    };
+
+    // Initialize FullCalendar
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        height: 'auto',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listWeek'
+        },
+        events: events.map(event => ({
+            ...event,
+            backgroundColor: categoryColors[event.category] || categoryColors['other'],
+            borderColor: categoryColors[event.category] || categoryColors['other'],
+            textColor: ['seminar'].includes(event.category) ? '#000' : '#fff'
+        })),
+        eventClick: function(info) {
+            showEventModal(info.event);
+        },
+        eventMouseEnter: function(info) {
+            info.el.style.cursor = 'pointer';
+            info.el.title = `${info.event.title}\nClick for details`;
+        },
+        eventDidMount: function(info) {
+            // Add category icon to event
+            const categoryIcons = {
+                'academic': 'fas fa-graduation-cap',
+                'cultural': 'fas fa-theater-masks',
+                'sports': 'fas fa-running',
+                'technical': 'fas fa-code',
+                'social': 'fas fa-users',
+                'workshop': 'fas fa-tools',
+                'seminar': 'fas fa-chalkboard-teacher',
+                'competition': 'fas fa-trophy',
+                'other': 'fas fa-calendar-alt'
+            };
+            
+            const icon = categoryIcons[info.event.extendedProps.category] || categoryIcons['other'];
+            const iconEl = document.createElement('i');
+            iconEl.className = icon + ' me-1';
+            info.el.querySelector('.fc-event-title').prepend(iconEl);
+        },
+        dayCellDidMount: function(info) {
+            // Highlight today
+            if (info.date.toDateString() === new Date().toDateString()) {
+                info.el.style.backgroundColor = 'rgba(13, 110, 253, 0.1)';
+            }
+        }
+    });
+
+    calendar.render();
+
+    // Function to show event modal
+    function showEventModal(event) {
+        const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+        const startDate = new Date(event.start);
+        const endDate = new Date(event.end);
+        
+        document.getElementById('eventModalTitle').textContent = event.title;
+        document.getElementById('eventModalViewButton').href = event.url;
+        
+        const modalBody = document.getElementById('eventModalBody');
+        modalBody.innerHTML = `
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <h6><i class="fas fa-calendar text-primary me-2"></i>Date & Time</h6>
+                    <p class="text-muted">
+                        <strong>Start:</strong> ${startDate.toLocaleDateString()} at ${startDate.toLocaleTimeString()}<br>
+                        <strong>End:</strong> ${endDate.toLocaleDateString()} at ${endDate.toLocaleTimeString()}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h6><i class="fas fa-tag text-success me-2"></i>Category</h6>
+                    <span class="badge bg-${getCategoryBootstrapColor(event.extendedProps.category)}">
+                        <i class="${getCategoryIcon(event.extendedProps.category)} me-1"></i>
+                        ${event.extendedProps.category.charAt(0).toUpperCase() + event.extendedProps.category.slice(1)}
+                    </span>
+                </div>
+            </div>
+            <div class="text-center">
+                <p class="text-muted">Click "View Full Details" to see complete event information and register.</p>
+            </div>
+        `;
+        
+        modal.show();
+    }
+
+    // Helper functions
+    function getCategoryBootstrapColor(category) {
+        const colors = {
+            'academic': 'primary',
+            'cultural': 'info',
+            'sports': 'success',
+            'technical': 'warning',
+            'social': 'secondary',
+            'workshop': 'dark',
+            'seminar': 'light',
+            'competition': 'danger',
+            'other': 'secondary'
+        };
+        return colors[category] || 'secondary';
+    }
+
+    function getCategoryIcon(category) {
+        const icons = {
+            'academic': 'fas fa-graduation-cap',
+            'cultural': 'fas fa-theater-masks',
+            'sports': 'fas fa-running',
+            'technical': 'fas fa-code',
+            'social': 'fas fa-users',
+            'workshop': 'fas fa-tools',
+            'seminar': 'fas fa-chalkboard-teacher',
+            'competition': 'fas fa-trophy',
+            'other': 'fas fa-calendar-alt'
+        };
+        return icons[category] || 'fas fa-calendar-alt';
+    }
+
+    // Populate mobile events list
+    function populateMobileEventsList() {
+        const mobileListEl = document.getElementById('mobile-events-list');
+        if (!mobileListEl) return;
+
+        // Sort events by start date
+        const sortedEvents = events.sort((a, b) => new Date(a.start) - new Date(b.start));
+        
+        if (sortedEvents.length === 0) {
+            mobileListEl.innerHTML = '<p class="text-muted text-center">No upcoming events found.</p>';
+            return;
+        }
+
+        const eventsList = sortedEvents.map(event => {
+            const startDate = new Date(event.start);
+            return `
+                <div class="card mb-2">
+                    <div class="card-body py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">${event.title}</h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    ${startDate.toLocaleDateString()} at ${startDate.toLocaleTimeString()}
+                                </small>
+                            </div>
+                            <div>
+                                <span class="badge bg-${getCategoryBootstrapColor(event.category)}">
+                                    <i class="${getCategoryIcon(event.category)} me-1"></i>
+                                    ${event.category}
+                                </span>
+                                <br>
+                                <a href="${event.url}" class="btn btn-outline-primary btn-sm mt-1">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        mobileListEl.innerHTML = eventsList;
+    }
+
+    populateMobileEventsList();
+
+    // Responsive calendar handling
+    function handleResponsiveCalendar() {
+        if (window.innerWidth < 768) {
+            calendar.changeView('listWeek');
+        } else {
+            calendar.changeView('dayGridMonth');
+        }
+    }
+
+    window.addEventListener('resize', handleResponsiveCalendar);
+    handleResponsiveCalendar();
+});
+</script>
+{% endblock %}

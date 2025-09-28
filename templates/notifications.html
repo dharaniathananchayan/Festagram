@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Festagram{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6">
+                        <i class="fas fa-bell me-2"></i>Notifications
+                    </h1>
+                    <p class="lead text-muted">Stay updated with your events and activities</p>
+                </div>
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('student_dashboard') if not current_user.is_admin() else url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ notifications.total }}</h4>
+                            <p class="card-text">Total Notifications</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-inbox fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ notifications.items | selectattr('is_read', 'equalto', false) | list | length }}</h4>
+                            <p class="card-text">Unread</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-envelope fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ notifications.items | selectattr('is_read', 'equalto', true) | list | length }}</h4>
+                            <p class="card-text">Read</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-envelope-open fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    {% if notifications.items %}
+    <div class="row">
+        <div class="col-12">
+            {% for notification in notifications.items %}
+            <div class="card mb-3 {{ 'border-primary' if not notification.is_read else '' }}">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-1 text-center">
+                            <!-- Notification Type Icon -->
+                            {% if notification.type == 'welcome' %}
+                            <i class="fas fa-hand-wave fa-2x text-success"></i>
+                            {% elif notification.type == 'registration_confirmed' %}
+                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                            {% elif notification.type == 'waitlist_added' %}
+                            <i class="fas fa-hourglass-half fa-2x text-warning"></i>
+                            {% elif notification.type == 'waitlist_promoted' %}
+                            <i class="fas fa-level-up-alt fa-2x text-info"></i>
+                            {% elif notification.type == 'event_update' %}
+                            <i class="fas fa-info-circle fa-2x text-primary"></i>
+                            {% elif notification.type == 'event_cancelled' %}
+                            <i class="fas fa-times-circle fa-2x text-danger"></i>
+                            {% elif notification.type == 'event_reminder' %}
+                            <i class="fas fa-bell fa-2x text-info"></i>
+                            {% else %}
+                            <i class="fas fa-envelope fa-2x text-secondary"></i>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-11">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title d-flex align-items-center">
+                                        {{ notification.title }}
+                                        {% if not notification.is_read %}
+                                        <span class="badge bg-primary ms-2">New</span>
+                                        {% endif %}
+                                    </h5>
+                                    <p class="card-text">{{ notification.message }}</p>
+                                    
+                                    <!-- Event Link -->
+                                    {% if notification.related_event %}
+                                    <div class="mt-2">
+                                        <a href="{{ url_for('event_detail', id=notification.related_event.id) }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-calendar-alt me-1"></i>View Event: {{ notification.related_event.title }}
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ notification.created_at.strftime('%b %d, %Y') }}<br>
+                                        {{ notification.created_at.strftime('%I:%M %p') }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notification Footer with Actions -->
+                <div class="card-footer bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-{{ 
+                                'success' if notification.type == 'registration_confirmed' or notification.type == 'waitlist_promoted' or notification.type == 'welcome'
+                                else 'warning' if notification.type == 'waitlist_added' or notification.type == 'event_reminder'
+                                else 'danger' if notification.type == 'event_cancelled'
+                                else 'info' if notification.type == 'event_update'
+                                else 'secondary'
+                            }}">
+                                {{ notification.type.replace('_', ' ').title() }}
+                            </span>
+                        </div>
+                        <div>
+                            {% if notification.related_event %}
+                            <small class="text-muted">
+                                <i class="fas fa-tag me-1"></i>
+                                Related to: {{ notification.related_event.category.title() }} Event
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if notifications.pages > 1 %}
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="Notifications pagination">
+                <ul class="pagination justify-content-center">
+                    {% if notifications.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('notifications', page=notifications.prev_num) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in notifications.iter_pages() %}
+                        {% if page_num %}
+                            {% if page_num != notifications.page %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('notifications', page=page_num) }}">{{ page_num }}</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page_num }}</span>
+                            </li>
+                            {% endif %}
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if notifications.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('notifications', page=notifications.next_num) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- No Notifications -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-bell-slash fa-4x text-muted mb-3"></i>
+                    <h5>No Notifications</h5>
+                    <p class="text-muted">You don't have any notifications yet. When you register for events or receive updates, they will appear here.</p>
+                    <a href="{{ url_for('events') }}" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Browse Events
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-scroll to unread notifications
+    const unreadNotifications = document.querySelectorAll('.border-primary');
+    if (unreadNotifications.length > 0 && window.location.hash !== '#top') {
+        unreadNotifications[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Add fade-in animation for notifications
+    const notifications = document.querySelectorAll('.card');
+    notifications.forEach((notification, index) => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            notification.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            notification.style.opacity = '1';
+            notification.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+
+    // Mark notification as read when clicked
+    const notificationCards = document.querySelectorAll('.card.border-primary');
+    notificationCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Remove the primary border to indicate it's been interacted with
+            this.classList.remove('border-primary');
+            
+            // Fade out the "New" badge
+            const newBadge = this.querySelector('.badge.bg-primary');
+            if (newBadge) {
+                newBadge.style.transition = 'opacity 0.3s ease';
+                newBadge.style.opacity = '0';
+                setTimeout(() => newBadge.remove(), 300);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

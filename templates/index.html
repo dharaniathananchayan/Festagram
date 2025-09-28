@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto text-center">
+            <h1 class="display-4 fw-bold mb-3">
+                <i class="fas fa-calendar-star text-primary me-3"></i>
+                Welcome to Festagram
+            </h1>
+            <p class="lead mb-4">
+                Discover, register, and participate in exciting college events. 
+                From academic seminars to cultural festivals, find your next adventure here.
+            </p>
+            {% if not current_user.is_authenticated %}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg me-md-2">
+                    <i class="fas fa-user-plus me-2"></i>Get Started
+                </a>
+                <a href="{{ url_for('events') }}" class="btn btn-outline-secondary btn-lg">
+                    <i class="fas fa-calendar-alt me-2"></i>Browse Events
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    {% if not current_user.is_authenticated %}
+    <div class="row mb-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0">
+                <div class="card-body text-center">
+                    <div class="feature-icon text-primary mb-3">
+                        <i class="fas fa-search fa-3x"></i>
+                    </div>
+                    <h5 class="card-title">Discover Events</h5>
+                    <p class="card-text">
+                        Browse through a wide variety of events across different categories 
+                        including academic, cultural, sports, and technical activities.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0">
+                <div class="card-body text-center">
+                    <div class="feature-icon text-success mb-3">
+                        <i class="fas fa-user-check fa-3x"></i>
+                    </div>
+                    <h5 class="card-title">Easy Registration</h5>
+                    <p class="card-text">
+                        Register for events with just a few clicks. Get automatic 
+                        confirmations and join waitlists when events are full.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0">
+                <div class="card-body text-center">
+                    <div class="feature-icon text-info mb-3">
+                        <i class="fas fa-bell fa-3x"></i>
+                    </div>
+                    <h5 class="card-title">Stay Updated</h5>
+                    <p class="card-text">
+                        Receive notifications about event updates, registration confirmations, 
+                        and important announcements directly in your dashboard.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Upcoming Events Section -->
+    {% if events %}
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-star me-2"></i>Upcoming Events
+            </h2>
+        </div>
+    </div>
+    <div class="row">
+        {% for event in events %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="badge bg-{{ get_category_color(event.category) }}">
+                        <i class="{{ get_category_icon(event.category) }} me-1"></i>
+                        {{ event.category.title() }}
+                    </span>
+                    <small class="text-muted">
+                        {{ event.start_datetime.strftime('%b %d') }}
+                    </small>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ event.title }}</h5>
+                    <p class="card-text">{{ event.description[:100] }}{% if event.description|length > 100 %}...{% endif %}</p>
+                    <div class="d-flex justify-content-between align-items-center text-muted">
+                        <small>
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            {{ event.location }}
+                        </small>
+                        <small>
+                            <i class="fas fa-users me-1"></i>
+                            {{ event.current_registrations }}/{{ event.capacity }}
+                        </small>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{{ url_for('event_detail', id=event.id) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-eye me-1"></i>View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="text-center mt-4">
+        <a href="{{ url_for('events') }}" class="btn btn-primary">
+            <i class="fas fa-calendar-alt me-2"></i>View All Events
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Call to Action for non-authenticated users -->
+    {% if not current_user.is_authenticated %}
+    <div class="row mt-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card bg-primary">
+                <div class="card-body text-center text-white">
+                    <h4 class="card-title">Ready to Get Started?</h4>
+                    <p class="card-text mb-4">
+                        Join Festagram today and never miss out on exciting college events again!
+                    </p>
+                    <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Create Account
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block scripts %}
+<script>
+    // Add utility functions to global scope
+    window.getCategoryColor = function(category) {
+        const colors = {
+            'academic': 'primary',
+            'cultural': 'info',
+            'sports': 'success',
+            'technical': 'warning',
+            'social': 'secondary',
+            'workshop': 'dark',
+            'seminar': 'light',
+            'competition': 'danger',
+            'other': 'secondary'
+        };
+        return colors[category] || 'secondary';
+    };
+
+    window.getCategoryIcon = function(category) {
+        const icons = {
+            'academic': 'fas fa-graduation-cap',
+            'cultural': 'fas fa-theater-masks',
+            'sports': 'fas fa-running',
+            'technical': 'fas fa-code',
+            'social': 'fas fa-users',
+            'workshop': 'fas fa-tools',
+            'seminar': 'fas fa-chalkboard-teacher',
+            'competition': 'fas fa-trophy',
+            'other': 'fas fa-calendar-alt'
+        };
+        return icons[category] || 'fas fa-calendar-alt';
+    };
+</script>
+{% endblock %}
+{% endblock %}

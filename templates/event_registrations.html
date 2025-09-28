@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Event Registrations - {{ event.title }} - Festagram{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Event Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="display-6">
+                        <i class="fas fa-users me-2"></i>
+                        Event Registrations
+                    </h1>
+                    <h4 class="text-muted">{{ event.title }}</h4>
+                    <p class="lead">
+                        <i class="fas fa-calendar me-2"></i>{{ event.start_datetime.strftime('%B %d, %Y at %I:%M %p') }}
+                        <i class="fas fa-map-marker-alt ms-3 me-2"></i>{{ event.location }}
+                    </p>
+                </div>
+                <div class="text-end">
+                    <a href="{{ url_for('event_details', id=event.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-eye me-2"></i>View Event
+                    </a>
+                    {% if current_user.is_admin() or event.created_by == current_user.id %}
+                    <a href="{{ url_for('edit_event', id=event.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-edit me-2"></i>Edit Event
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ event.capacity }}</h3>
+                    <p class="card-text">Total Capacity</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ registered_users|length }}</h3>
+                    <p class="card-text">Registered</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ waitlisted_users|length }}</h3>
+                    <p class="card-text">Waitlisted</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3 class="card-title">{{ event.get_available_spots() }}</h3>
+                    <p class="card-text">Available Spots</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registered Users -->
+    <div class="row">
+        <div class="col-lg-7 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-check-circle me-2 text-success"></i>
+                        Registered Participants ({{ registered_users|length }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if registered_users %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Student ID</th>
+                                        <th>Registration Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for registration, user in registered_users %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ user.get_full_name() }}</strong>
+                                            {% if user.department %}
+                                                <br><small class="text-muted">{{ user.department }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ user.email }}</td>
+                                        <td>{{ user.student_id or 'N/A' }}</td>
+                                        <td>
+                                            {{ registration.registration_date.strftime('%b %d, %Y') }}
+                                            <br><small class="text-muted">{{ registration.registration_date.strftime('%I:%M %p') }}</small>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">No registered participants yet</h6>
+                            <p class="text-muted">Registrations will appear here as people sign up for the event.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Waitlisted Users -->
+        <div class="col-lg-5 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clock me-2 text-warning"></i>
+                        Waitlist ({{ waitlisted_users|length }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if waitlisted_users %}
+                        {% for registration, user in waitlisted_users %}
+                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 {% if not loop.last %}border-bottom{% endif %}">
+                            <div>
+                                <h6 class="mb-1">{{ user.get_full_name() }}</h6>
+                                <small class="text-muted">{{ user.email }}</small>
+                                {% if user.student_id %}
+                                    <br><small class="text-muted">ID: {{ user.student_id }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">
+                                    {{ registration.registration_date.strftime('%b %d') }}
+                                </small>
+                                <br>
+                                <span class="badge bg-warning text-dark">Position {{ loop.index }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-list fa-2x text-muted mb-3"></i>
+                            <h6 class="text-muted">No waitlisted participants</h6>
+                            <p class="text-muted">Users who register after capacity is reached will appear here.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Information -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Event Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Category:</strong> 
+                                <span class="badge {{ get_category_color(event.category) }}">
+                                    <i class="{{ get_category_icon(event.category) }} me-1"></i>{{ event.category.title() }}
+                                </span>
+                            </p>
+                            <p><strong>Registration Deadline:</strong> {{ event.registration_deadline.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                            <p><strong>Waitlist Allowed:</strong> 
+                                {% if event.allow_waitlist %}
+                                    <span class="badge bg-success">Yes</span>
+                                {% else %}
+                                    <span class="badge bg-danger">No</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Event Duration:</strong> 
+                                {{ event.start_datetime.strftime('%B %d, %Y at %I:%M %p') }} - 
+                                {{ event.end_datetime.strftime('%I:%M %p') }}
+                            </p>
+                            <p><strong>Created:</strong> {{ event.created_at.strftime('%B %d, %Y') }}</p>
+                            <p><strong>Last Updated:</strong> {{ event.updated_at.strftime('%B %d, %Y') }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <p><strong>Description:</strong></p>
+                        <p class="text-muted">{{ event.description }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

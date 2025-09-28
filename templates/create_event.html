@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Create Event - Festagram{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="display-6">
+                        <i class="fas fa-plus-circle me-2"></i>Create New Event
+                    </h1>
+                    <p class="lead text-muted">Fill in the details to create an exciting event</p>
+                </div>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-calendar-plus me-2"></i>Event Information
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Basic Information -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-info-circle me-1"></i>Basic Information
+                            </h6>
+                            
+                            <div class="mb-3">
+                                {{ form.title.label(class="form-label") }}
+                                {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="Enter a descriptive event title") }}
+                                {% if form.title.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.title.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.description.label(class="form-label") }}
+                                {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), placeholder="Provide a detailed description of the event, including what attendees can expect") }}
+                                {% if form.description.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.description.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Be descriptive to help students understand what the event is about.</div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.category.label(class="form-label") }}
+                                    {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+                                    {% if form.category.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.category.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.location.label(class="form-label") }}
+                                    {{ form.location(class="form-control" + (" is-invalid" if form.location.errors else ""), placeholder="e.g., Main Auditorium, Sports Complex") }}
+                                    {% if form.location.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.location.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Date & Time -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-clock me-1"></i>Date & Time
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.start_datetime.label(class="form-label") }}
+                                    {{ form.start_datetime(class="form-control" + (" is-invalid" if form.start_datetime.errors else "")) }}
+                                    {% if form.start_datetime.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.start_datetime.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.end_datetime.label(class="form-label") }}
+                                    {{ form.end_datetime(class="form-control" + (" is-invalid" if form.end_datetime.errors else "")) }}
+                                    {% if form.end_datetime.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.end_datetime.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.registration_deadline.label(class="form-label") }}
+                                {{ form.registration_deadline(class="form-control" + (" is-invalid" if form.registration_deadline.errors else "")) }}
+                                {% if form.registration_deadline.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.registration_deadline.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Students won't be able to register after this deadline.</div>
+                            </div>
+                        </div>
+
+                        <!-- Capacity & Settings -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-users me-1"></i>Capacity & Settings
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.capacity.label(class="form-label") }}
+                                    {{ form.capacity(class="form-control" + (" is-invalid" if form.capacity.errors else ""), placeholder="Maximum number of attendees") }}
+                                    {% if form.capacity.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.capacity.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">&nbsp;</label>
+                                    <div class="form-check mt-2">
+                                        {{ form.allow_waitlist(class="form-check-input") }}
+                                        {{ form.allow_waitlist.label(class="form-check-label") }}
+                                    </div>
+                                    <div class="form-text">Allow students to join a waitlist when the event is full.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tips Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Tips for Creating Great Events
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li><strong>Clear Title:</strong> Use descriptive titles that immediately convey what the event is about.</li>
+                        <li><strong>Detailed Description:</strong> Include agenda, prerequisites, what to bring, and expected outcomes.</li>
+                        <li><strong>Appropriate Timing:</strong> Consider class schedules and other campus events when setting dates.</li>
+                        <li><strong>Realistic Capacity:</strong> Set capacity based on venue size and expected attendance.</li>
+                        <li><strong>Early Registration:</strong> Allow enough time for students to plan and register.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    // Auto-populate end time when start time is selected
+    document.getElementById('start_datetime').addEventListener('change', function() {
+        const startTime = new Date(this.value);
+        const endTimeInput = document.getElementById('end_datetime');
+        
+        if (!endTimeInput.value && startTime) {
+            // Default to 2 hours after start time
+            const endTime = new Date(startTime.getTime() + (2 * 60 * 60 * 1000));
+            endTimeInput.value = endTime.toISOString().slice(0, 16);
+        }
+    });
+
+    // Auto-populate registration deadline
+    document.getElementById('start_datetime').addEventListener('change', function() {
+        const startTime = new Date(this.value);
+        const deadlineInput = document.getElementById('registration_deadline');
+        
+        if (!deadlineInput.value && startTime) {
+            // Default to 1 day before start time
+            const deadline = new Date(startTime.getTime() - (24 * 60 * 60 * 1000));
+            deadlineInput.value = deadline.toISOString().slice(0, 16);
+        }
+    });
+
+    // Character counter for description
+    const descriptionTextarea = document.getElementById('description');
+    if (descriptionTextarea) {
+        const maxLength = 2000;
+        const counter = document.createElement('div');
+        counter.className = 'form-text text-end';
+        counter.id = 'description-counter';
+        descriptionTextarea.parentNode.appendChild(counter);
+        
+        function updateCounter() {
+            const remaining = maxLength - descriptionTextarea.value.length;
+            counter.textContent = `${descriptionTextarea.value.length}/${maxLength} characters`;
+            counter.className = remaining < 100 ? 'form-text text-end text-warning' : 'form-text text-end';
+        }
+        
+        descriptionTextarea.addEventListener('input', updateCounter);
+        updateCounter();
+    }
+</script>
+{% endblock %}
+{% endblock %}

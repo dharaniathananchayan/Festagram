@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ event.title }} - Festagram{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="display-6">
+                        <i class="fas fa-edit me-2"></i>Edit Event
+                    </h1>
+                    <p class="lead text-muted">Update event details</p>
+                </div>
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('event_detail', id=event.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-eye me-1"></i>View Event
+                    </a>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <!-- Event Status Card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                            <h6>Registrations</h6>
+                            <p class="mb-0"><strong>{{ event.current_registrations }}/{{ event.capacity }}</strong></p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <i class="fas fa-hourglass-half fa-2x text-warning mb-2"></i>
+                            <h6>Waitlist</h6>
+                            <p class="mb-0"><strong>{{ event.get_waitlist_count() }}</strong></p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <i class="fas fa-calendar-check fa-2x text-success mb-2"></i>
+                            <h6>Status</h6>
+                            <p class="mb-0">
+                                {% if event.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <i class="fas fa-clock fa-2x text-info mb-2"></i>
+                            <h6>Created</h6>
+                            <p class="mb-0">{{ event.created_at.strftime('%b %d, %Y') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-calendar-edit me-2"></i>Event Information
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Basic Information -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-info-circle me-1"></i>Basic Information
+                            </h6>
+                            
+                            <div class="mb-3">
+                                {{ form.title.label(class="form-label") }}
+                                {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else "")) }}
+                                {% if form.title.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.title.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.description.label(class="form-label") }}
+                                {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else "")) }}
+                                {% if form.description.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.description.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.category.label(class="form-label") }}
+                                    {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+                                    {% if form.category.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.category.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.location.label(class="form-label") }}
+                                    {{ form.location(class="form-control" + (" is-invalid" if form.location.errors else "")) }}
+                                    {% if form.location.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.location.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Date & Time -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-clock me-1"></i>Date & Time
+                            </h6>
+                            
+                            {% if event.current_registrations > 0 %}
+                            <div class="alert alert-warning" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Warning:</strong> {{ event.current_registrations }} students are already registered. 
+                                Changing date, time, or location will notify all registered users.
+                            </div>
+                            {% endif %}
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.start_datetime.label(class="form-label") }}
+                                    {{ form.start_datetime(class="form-control" + (" is-invalid" if form.start_datetime.errors else "")) }}
+                                    {% if form.start_datetime.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.start_datetime.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.end_datetime.label(class="form-label") }}
+                                    {{ form.end_datetime(class="form-control" + (" is-invalid" if form.end_datetime.errors else "")) }}
+                                    {% if form.end_datetime.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.end_datetime.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.registration_deadline.label(class="form-label") }}
+                                {{ form.registration_deadline(class="form-control" + (" is-invalid" if form.registration_deadline.errors else "")) }}
+                                {% if form.registration_deadline.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.registration_deadline.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Capacity & Settings -->
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-users me-1"></i>Capacity & Settings
+                            </h6>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.capacity.label(class="form-label") }}
+                                    {{ form.capacity(class="form-control" + (" is-invalid" if form.capacity.errors else "")) }}
+                                    {% if form.capacity.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.capacity.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    {% if event.current_registrations > 0 %}
+                                    <div class="form-text text-warning">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Cannot reduce capacity below current registrations ({{ event.current_registrations }})
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">&nbsp;</label>
+                                    <div class="form-check mt-2">
+                                        {{ form.allow_waitlist(class="form-check-input") }}
+                                        {{ form.allow_waitlist.label(class="form-check-label") }}
+                                    </div>
+                                    <div class="form-text">Allow students to join a waitlist when the event is full.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('event_detail', id=event.id) }}" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                            {{ form.submit(class="btn btn-primary", value="Update Event") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="card mt-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Danger Zone
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Cancelling this event will notify all registered users and set the event as inactive.
+                        This action cannot be undone.
+                    </p>
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash me-1"></i>Cancel Event
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel "<strong>{{ event.title }}</strong>"?</p>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    This action cannot be undone. All {{ event.current_registrations }} registered users will be notified about the cancellation.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Event</button>
+                <form method="POST" action="{{ url_for('delete_event', id=event.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Cancel Event
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    // Validate capacity doesn't go below current registrations
+    document.getElementById('capacity').addEventListener('input', function() {
+        const currentRegistrations = {{ event.current_registrations }};
+        const newCapacity = parseInt(this.value);
+        
+        if (newCapacity < currentRegistrations) {
+            this.setCustomValidity(`Capacity cannot be less than current registrations (${currentRegistrations})`);
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+
+    // Character counter for description
+    const descriptionTextarea = document.getElementById('description');
+    if (descriptionTextarea) {
+        const maxLength = 2000;
+        const counter = document.createElement('div');
+        counter.className = 'form-text text-end';
+        counter.id = 'description-counter';
+        descriptionTextarea.parentNode.appendChild(counter);
+        
+        function updateCounter() {
+            const remaining = maxLength - descriptionTextarea.value.length;
+            counter.textContent = `${descriptionTextarea.value.length}/${maxLength} characters`;
+            counter.className = remaining < 100 ? 'form-text text-end text-warning' : 'form-text text-end';
+        }
+        
+        descriptionTextarea.addEventListener('input', updateCounter);
+        updateCounter();
+    }
+</script>
+{% endblock %}
+{% endblock %}
