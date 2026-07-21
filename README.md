@@ -105,5 +105,5 @@ Festagram/
 
 ## 👩‍💻 Author
 
-**Dharani Athananchayan**
+**Dharania Thananchayan**
 [GitHub](https://github.com/dharaniathananchayan) · [Live Project](https://festagram.vercel.app/)
